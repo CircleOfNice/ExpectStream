@@ -1,0 +1,33 @@
+{
+  "coverage": "50%",
+  "expectCount": 18,
+  "actualCount": 9,
+  "files": {
+    "src/AssertStream.js": {
+      "expectCount": 5,
+      "actualCount": 3,
+      "undocumentLines": [
+        25,
+        26
+      ]
+    },
+    "src/Expected.js": {
+      "expectCount": 12,
+      "actualCount": 5,
+      "undocumentLines": [
+        8,
+        32,
+        31,
+        35,
+        33,
+        30,
+        34
+      ]
+    },
+    "src/StreamHelper.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    }
+  }
+}

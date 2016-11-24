@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl">
+  <title data-ice="title">API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/CircleOfNice/CoreAssert.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/AssertStream.js~AssertStream.html">AssertStream</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Expected.js~Expected.html">Expected</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-StreamHelper">StreamHelper</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="coreassert">CoreAssert</h1>
+<p>Testing stuff sucks and testing more esoteric stuff sucks harder. So we build this extension to chai to reduce the suck-factor of comparing images and testing node streams.
+Now, let&apos;s forget about all the drama and call it a victory:</p>
+<p><img src="http://www.quotesmeme.com/wp-content/uploads/2015/06/f60752b4481e83013217fa3d82f616bd.jpg" alt="victory" title="victory"></p>
+<h1 id="api">API</h1>
+<p>As this module extends <a href="http://chaijs.com">chai</a> most of the documentation can be found at their website. CoreAssert extends it with new methods for asserting streams asynchronously and also ships some assertions for image comparison:</p>
+<h3 id="streams">Streams</h3>
+<h5 id="-produce">.produce</h5>
+<p>This method takes either one or multiple values, which are expected to be the only outputs produced by the stream under test or a function that takes the value and checks if it is the expected one. In the latter case, there are three values your callback should return to signal its state:</p>
+<ul>
+<li><p>If the function returns <code>0</code>, the input value is not the expected value, but does not represent an error case either. The test will go on (or timeout).</p>
+</li>
+<li><p>If the function returns <code>1</code>, it&apos;s the signal that the correct value has finally arrived. The assertion will notify the test, that it is successful.</p>
+</li>
+<li><p>If the function returns <code>-1</code>, it signals that the given input value is erroneous. We will be notified of the error via <code>notify</code>.</p>
+</li>
+</ul>
+<h5 id="-eventually">.eventually</h5>
+<p>This property allows CoreAssert to ignore mismatches until the correct values are produced.</p>
+<h4 id="-exactly">.exactly</h4>
+<p>Using this chainable method will adjust the assertion configuration to strict equality. Otherwise <code>CoreAssert</code> validates, if the produced output contains the expected value. </p>
+<h5 id="-filter">.filter</h5>
+<p>This method accepts a function, that can be used to ignore some outputs, which is signalled by returning <code>false</code> in this callback.</p>
+<h5 id="-on">.on</h5>
+<p>This method takes the values the stream under test should use to produce its output, if it isn&apos;t only a readable stream.</p>
+<h5 id="-notify">.notify</h5>
+<p>This method is used to notify the testrunner if an error occurs or if the streams ended and have produced the expected message</p>
+<h5 id="-tap">.tap</h5>
+<p>With this method you can tap into the stream under test and inspect whats going on, if an error happens</p>
+<h3 id="image-comparison">Image Comparison</h3>
+<h5 id="-image">.image</h5>
+<p>This function expects the value to be the buffer of the reference image you are testing against.</p>
+<h5 id="-part">.part</h5>
+<p>In conjunction with the previous method this method enables you to ignore several regions of both images, when comparing them. See <a href="https://github.com/CircleOfNice/ImageComparer.git">ImageComparer</a> if you like to get to know more about regions.</p>
+<h1 id="usage">Usage</h1>
+<h3 id="testing-streams">Testing Streams</h3>
+<p>Suppose we have a transform stream, that adds a Mr. to the start of every value, that enters it:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// src/Misterizer
+import { Transform } from &quot;stream&quot;;
+
+export default class Misterizer extends Transform {
+    _transform(name, enc, cb) {
+        this.push(`Mr. ${name}`);
+        cb();
+    }
+}</code>
+</code></pre>
+<p>Now we&apos;d like to test it, using mocha with CoreAssert:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// src/__tests__/MisterizerTest
+import { expect } from &quot;core-assert&quot;;
+import Misterizer from &quot;../Misterizer&quot;
+
+describe(&quot;MisterizerTest&quot;, function() {
+    // this test passes
+    it(&quot;Misterizes Circle&quot;, function(done) {
+        expect(new Misterizer())
+            .to.exactly.produce(&quot;Mr. Circle&quot;)
+            .on(&quot;Circle&quot;)
+            .notify(done);
+    });
+
+    // this test will trigger a timeout
+    it(&quot;Misterizes Square&quot;, function(done) {
+        expect(new Misterizer())
+            .to.eventually.produce(&quot;Mr. Circle&quot;)
+            .on(&quot;Square&quot;)
+            .tap(::console.log) // will print &quot;Square, 0)&quot;
+            .notify(done);
+    });
+});</code>
+</code></pre>
+<p>But the mighty power of <code>CoreAssert</code> offers much more functionality, which will be presented by FunnyBot: </p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// src/FunnyBot
+import { Readable } from &quot;stream&quot;;
+
+export default class FunnyBot extends Readable {
+    constructor(jokes) {
+        super({ objectMode: true });
+
+        this.jokes = jokes;
+    }
+
+    _read() {
+        return this.push(this.jokes.shift());
+    }
+}</code>
+</code></pre>
+<p>All that is missing now are some funny jokes:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// src/__tests__/FunnyBotTest
+import { expect } from &quot;@circle/core-assert&quot;;
+import FunnyBot from &quot;../FunnyBot&quot;;
+
+describe(&quot;FunnyBot&quot;, function() {
+    it(&quot;tells multiple really funny jokes&quot;, function() {
+        expect(new FunnyBot([{
+            date: Date.now(),
+            joke: &quot;Hello, I am FunnyBot!&quot;
+        }, {
+            date: Date.now(),
+            joke: &quot;I am not a joke&quot;
+        }, {
+            date: Date.now(),
+            joke: &quot;What do you see when the Pillsbury Dough Boy bends over? Dough nuts&quot;
+        }]).filter(x =&gt; x.joke !== &quot;I am not a joke&quot;).to.produce([{
+            joke: &quot;Hello, I am FunnyBot!&quot; 
+        }, {
+            joke: &quot;What do you see when the Pillsbury Dough Boy bends over? Dough nuts&quot;
+        }]).notify(done);
+    });
+
+    it(&quot;thinks about complex problems&quot;, function() {
+        expect(new FunnyBot([{
+            date: Date.now(),
+            joke: &quot;Hello, I am FunnyBot!&quot;
+        }, {
+            date: Date.now(),
+            joke: &quot;I am not a joke&quot;
+        }, {
+            date: Date.now(),
+            joke: &quot;The line is an imaginary invention of imperfect biological life forms.&quot;
+        }]).to.eventually.produce([{
+            joke: &quot;Hello, I am FunnyBot!&quot; 
+        }, {
+            joke: &quot;The line is an imaginary invention of imperfect biological life forms.&quot;
+        }]).notify(done);
+    });
+
+    it(&quot;writes up some new material&quot;, function() {
+        expect(new FunnyBot([{
+            firstTry: &quot;Error. Error. Banal.&quot;
+        }, {
+            secondTry: &quot;That has been done before.&quot;
+        }, {
+            lastTry: &quot;Funnybot is now finished with final joke.&quot;
+        }]).to.produce.exactly([{
+            firstTry: &quot;Error. Error. Banal.&quot;
+        }, {
+            secondTry: &quot;That has been done before.&quot;
+        }, {
+            lastTry: &quot;Funnybot is now finished with final joke.&quot;
+        }]).notify(done);    
+    });
+});</code>
+</code></pre>
+<h3 id="testing-images">Testing Images</h3>
+<p>Using mocha with CoreAssert for image comparison results in the following:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">// src/__tests__/ImageComparerTest
+import { expect } from &quot;core-assert&quot;;
+import Q from &quot;q&quot;;
+import fs from &quot;fs&quot;;
+
+describe(&quot;ImageComparerTest&quot;, function() {
+    // this test results in a full comparison of given image buffers
+    it(&quot;ImageComparer (no regions)&quot;, async function(done) {
+        try {
+            const image     = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/image.png&quot;));
+            const reference = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/reference.png&quot;));
+
+            expect(image).to.be.image(reference);
+            done();
+        } catch(e) {
+            done(e);
+        }
+    });
+
+    // this test results in a comparison of given image buffers with suppressed regions
+    it(&quot;ImageComparer (with regions)&quot;, async function(done) {
+        try {
+            const image     = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/image.png&quot;));
+            const reference = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/reference.png&quot;));
+            const regions   = [{
+                absolute: {
+                    x:      10,
+                    y:      10,
+                    height: 5,
+                    width:  5
+                },
+                relative: {
+                    x:      10,
+                    y:      10,
+                    height: 5,
+                    width:  5
+                },
+                precision: 100
+            }];
+
+            expect(image).to.be.part(regions).of.image(reference);
+
+            done();
+        } catch(e) {
+            done(e);
+        }
+    });
+});</code>
+</code></pre>
+<h1 id="-a-name-testing-a-testing"><a name="testing"></a>Testing</h1>
+<p>CoreAssert is tested with mocha by executing <code>make test</code> in the root directory of the project.</p>
+<h1 id="contributing">Contributing</h1>
+<p>If you want to contribute to this repository, please ensure ...</p>
+<ul>
+<li>to use <code>make</code> for development (it validates the source code and transpiles it to <code>/lib</code>).</li>
+<li>to follow the existing coding style.</li>
+<li>to use the linting tools that are listed in the <code>package.json</code> (which you get for free when using <code>make</code>).</li>
+<li>to add and/or customize unit tests for any changed code.</li>
+<li>to reference the corresponding issue in your pull request with a small description of your changes.</li>
+</ul>
+<p>All contributors are listed in the <code>AUTHORS</code> file, sorted by the time of their first contribution.</p>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.8)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
