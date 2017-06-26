@@ -3,6 +3,10 @@ import assert from "assert";
 import AssertStream from "./AssertStream";
 import defaults from "set-default-value";
 
+const states = new WeakMap();
+const get    = ctx => states.has(ctx) ? states.get(ctx) : {};
+const set    = (ctx, x) => states.set(ctx, Object.assign(get(ctx), x));
+
 /**
  * this function adds the new methods to the Assertion
  * chain, where they have the following responsibilities:
@@ -16,55 +20,67 @@ import defaults from "set-default-value";
  */
 const StreamHelper = function({ Assertion }) {
     Assertion.addChainableMethod("exactly", function(expected) {
-        this.expected       = defaults(expected).to(this.expected);
-        this.strictEquality = true;
+        set(this._obj, {
+            expected:       defaults(expected).to(get(this._obj).expected),
+            strictEquality: true
+        });
     }, function() {
-        this.strictEquality = true;
+        set(this._obj, {
+            strictEquality: true
+        });
     });
 
     Assertion.addChainableMethod("produce", function(expected) {
-        this.expected = expected;
-        this.args     = [];
+        set(this._obj, {
+            expected: expected,
+            args:     []
+        });
     }, function() {
-        this.args = [];
+        set(this._obj, {
+            args: []
+        });
     });
 
     Assertion.addProperty("eventually", function() {
-        this.checkAllResults = true;
+        set(this._obj, {
+            checkAllResults: true
+        });
     });
 
     Assertion.addMethod("filter", function(filter) {
-        this.filterMethod = filter;
+        set(this._obj, {
+            filterMethod: filter
+        });
     });
 
     Assertion.addMethod("notify", function(done) {
-        const sink = new AssertStream(this.expected, {
-            filter:     this.filterMethod,
-            tapper:     this.tapper,
-            eventually: this.checkAllResults,
-            strict:     this.strictEquality
+        const sink = new AssertStream(get(this._obj).expected, {
+            filter:     get(this._obj).filterMethod,
+            tapper:     get(this._obj).tapper,
+            eventually: get(this._obj).checkAllResults,
+            strict:     get(this._obj).strictEquality
         });
 
         this._obj.pipe(sink)     // eslint-disable-line
             .on("done", done)
             .on("error", done);
 
-        this.args.forEach(arg => this._obj.write(arg)); // eslint-disable-line
+        get(this._obj).args.forEach(arg => this._obj.write(arg)); // eslint-disable-line
     });
 
     Assertion.addMethod("tap", function(tapper) {
-        this.tapper = tapper;
+        set(this._obj, { tapper });
     });
 
     Assertion.addMethod("on", function(...args) {
         const { write } = this._obj; // eslint-disable-line
 
-        assert(
+        assert((
             (args.length > 0 && isFunction(write)) ||
-            (args.length === 0 && !isFunction(write)
+            (args.length === 0 && !isFunction(write))
         ), "You can only use arguments with a writable stream.");
 
-        this.args = args;
+        set(this._obj, { args });
     });
 };
 

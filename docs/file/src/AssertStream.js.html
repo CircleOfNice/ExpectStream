@@ -44,21 +44,8 @@
 import Expected from &quot;./Expected&quot;;
 import defaults from &quot;set-default-value&quot;;
 
-/**
- * this stream is used to be piped into.
- * it ends if the expected value was received.
- *
- * @author Marco Sliwa &lt;marco@circle.ai&gt;
- */
 export default class AssertStream extends Writable {
 
-    /**
-     * constructor for this stream
-     *
-     * @constructor
-     * @param       {*}      expected value
-     * @param       {object} options  configuring the behaviour of AssertSream
-     */
     constructor(expected, options) {
         super({
             objectMode: true
@@ -68,16 +55,6 @@ export default class AssertStream extends Writable {
         this.tapper   = defaults(options.tapper).to(() =&gt; {});
     }
 
-    /**
-     * implementation of the write function. transforms data,
-     * so that it can be compared, emits end on match, otherwise
-     * continues.
-     *
-     * @param  {string|object} chunk of data
-     * @param  {string}        enc   of data
-     * @param  {function}      cb    when operation finished
-     * @return {*}
-     */
     _write(chunk, enc, cb) {
         const data   = Buffer.isBuffer(chunk) ? chunk.toString() : chunk;
         const result = this.expected.match(data);

@@ -12,11 +12,9 @@ class ReadStream extends Readable {
     }
 
     _read() {
-        this.push(
-            isArray(this.messages) ?
-            this.messages.shift() :
-            this.messages
-        );
+        const message = isArray(this.messages) ? this.messages.shift() : this.messages;
+
+        this.push(message);
     }
 }
 

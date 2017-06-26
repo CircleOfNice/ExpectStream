@@ -10,7 +10,7 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "import { Writable } from \"stream\";\nimport Expected from \"./Expected\";\nimport defaults from \"set-default-value\";\n\n/**\n * this stream is used to be piped into.\n * it ends if the expected value was received.\n *\n * @author Marco Sliwa <marco@circle.ai>\n */\nexport default class AssertStream extends Writable {\n\n    /**\n     * constructor for this stream\n     *\n     * @constructor\n     * @param       {*}      expected value\n     * @param       {object} options  configuring the behaviour of AssertSream\n     */\n    constructor(expected, options) {\n        super({\n            objectMode: true\n        });\n\n        this.expected = Expected.of(expected, options);\n        this.tapper   = defaults(options.tapper).to(() => {});\n    }\n\n    /**\n     * implementation of the write function. transforms data,\n     * so that it can be compared, emits end on match, otherwise\n     * continues.\n     *\n     * @param  {string|object} chunk of data\n     * @param  {string}        enc   of data\n     * @param  {function}      cb    when operation finished\n     * @return {*}\n     */\n    _write(chunk, enc, cb) {\n        const data   = Buffer.isBuffer(chunk) ? chunk.toString() : chunk;\n        const result = this.expected.match(data);\n\n        this.tapper(data, result);\n\n        return result === -1 ? this.emit(\"error\", this.expected.getError()) : setTimeout(() => result === 1 ? this.emit(\"done\") : cb(), 1);\n    }\n}\n"
+    "content": "import { Writable } from \"stream\";\nimport Expected from \"./Expected\";\nimport defaults from \"set-default-value\";\n\nexport default class AssertStream extends Writable {\n\n    constructor(expected, options) {\n        super({\n            objectMode: true\n        });\n\n        this.expected = Expected.of(expected, options);\n        this.tapper   = defaults(options.tapper).to(() => {});\n    }\n\n    _write(chunk, enc, cb) {\n        const data   = Buffer.isBuffer(chunk) ? chunk.toString() : chunk;\n        const result = this.expected.match(data);\n\n        this.tapper(data, result);\n\n        return result === -1 ? this.emit(\"error\", this.expected.getError()) : setTimeout(() => result === 1 ? this.emit(\"done\") : cb(), 1);\n    }\n}\n"
   },
   {
     "__docId__": 1,
@@ -24,14 +24,9 @@
     "export": true,
     "importPath": "expect-stream/src/AssertStream.js",
     "importStyle": "AssertStream",
-    "description": "this stream is used to be piped into.\nit ends if the expected value was received.",
-    "lineNumber": 11,
-    "unknown": [
-      {
-        "tagName": "@author",
-        "tagValue": "Marco Sliwa <marco@circle.ai>"
-      }
-    ],
+    "description": null,
+    "lineNumber": 5,
+    "undocument": true,
     "interface": false,
     "extends": [
       "stream~Writable"
@@ -46,34 +41,21 @@
     "memberof": "src/AssertStream.js~AssertStream",
     "longname": "src/AssertStream.js~AssertStream#constructor",
     "access": null,
-    "description": "constructor for this stream",
-    "lineNumber": 20,
-    "unknown": [
-      {
-        "tagName": "@constructor",
-        "tagValue": ""
-      }
-    ],
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
     "params": [
       {
-        "nullable": null,
+        "name": "expected",
         "types": [
           "*"
-        ],
-        "spread": false,
-        "optional": false,
-        "name": "expected",
-        "description": "value"
+        ]
       },
       {
-        "nullable": null,
-        "types": [
-          "object"
-        ],
-        "spread": false,
-        "optional": false,
         "name": "options",
-        "description": "configuring the behaviour of AssertSream"
+        "types": [
+          "*"
+        ]
       }
     ],
     "generator": false
@@ -88,7 +70,7 @@
     "longname": "src/AssertStream.js~AssertStream#expected",
     "access": null,
     "description": null,
-    "lineNumber": 25,
+    "lineNumber": 12,
     "undocument": true,
     "type": {
       "types": [
@@ -106,7 +88,7 @@
     "longname": "src/AssertStream.js~AssertStream#tapper",
     "access": null,
     "description": null,
-    "lineNumber": 26,
+    "lineNumber": 13,
     "undocument": true,
     "type": {
       "types": [
@@ -123,48 +105,33 @@
     "memberof": "src/AssertStream.js~AssertStream",
     "longname": "src/AssertStream.js~AssertStream#_write",
     "access": null,
-    "description": "implementation of the write function. transforms data,\nso that it can be compared, emits end on match, otherwise\ncontinues.",
-    "lineNumber": 39,
+    "description": null,
+    "lineNumber": 16,
+    "undocument": true,
     "params": [
       {
-        "nullable": null,
-        "types": [
-          "string",
-          "object"
-        ],
-        "spread": false,
-        "optional": false,
         "name": "chunk",
-        "description": "of data"
+        "types": [
+          "*"
+        ]
       },
       {
-        "nullable": null,
-        "types": [
-          "string"
-        ],
-        "spread": false,
-        "optional": false,
         "name": "enc",
-        "description": "of data"
+        "types": [
+          "*"
+        ]
       },
       {
-        "nullable": null,
-        "types": [
-          "function"
-        ],
-        "spread": false,
-        "optional": false,
         "name": "cb",
-        "description": "when operation finished"
+        "types": [
+          "*"
+        ]
       }
     ],
     "return": {
-      "nullable": null,
       "types": [
         "*"
-      ],
-      "spread": false,
-      "description": ""
+      ]
     },
     "generator": false
   },
@@ -497,10 +464,73 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "import isFunction from \"lodash.isfunction\";\nimport assert from \"assert\";\nimport AssertStream from \"./AssertStream\";\nimport defaults from \"set-default-value\";\n\n/**\n * this function adds the new methods to the Assertion\n * chain, where they have the following responsibilities:\n *\n * produce: sets the expected value of the stream\n * on:      gives a set of input values, if testing\n *          a transformer\n * notify:  cb for error and done notifications\n *\n * @param {object} chai  to be extended\n */\nconst StreamHelper = function({ Assertion }) {\n    Assertion.addChainableMethod(\"exactly\", function(expected) {\n        this.expected       = defaults(expected).to(this.expected);\n        this.strictEquality = true;\n    }, function() {\n        this.strictEquality = true;\n    });\n\n    Assertion.addChainableMethod(\"produce\", function(expected) {\n        this.expected = expected;\n        this.args     = [];\n    }, function() {\n        this.args = [];\n    });\n\n    Assertion.addProperty(\"eventually\", function() {\n        this.checkAllResults = true;\n    });\n\n    Assertion.addMethod(\"filter\", function(filter) {\n        this.filterMethod = filter;\n    });\n\n    Assertion.addMethod(\"notify\", function(done) {\n        const sink = new AssertStream(this.expected, {\n            filter:     this.filterMethod,\n            tapper:     this.tapper,\n            eventually: this.checkAllResults,\n            strict:     this.strictEquality\n        });\n\n        this._obj.pipe(sink)     // eslint-disable-line\n            .on(\"done\", done)\n            .on(\"error\", done);\n\n        this.args.forEach(arg => this._obj.write(arg)); // eslint-disable-line\n    });\n\n    Assertion.addMethod(\"tap\", function(tapper) {\n        this.tapper = tapper;\n    });\n\n    Assertion.addMethod(\"on\", function(...args) {\n        const { write } = this._obj; // eslint-disable-line\n\n        assert(\n            (args.length > 0 && isFunction(write)) ||\n            (args.length === 0 && !isFunction(write)\n        ), \"You can only use arguments with a writable stream.\");\n\n        this.args = args;\n    });\n};\n\nexport default StreamHelper;\n"
+    "content": "import isFunction from \"lodash.isfunction\";\nimport assert from \"assert\";\nimport AssertStream from \"./AssertStream\";\nimport defaults from \"set-default-value\";\n\nconst states = new WeakMap();\nconst get    = ctx => states.has(ctx) ? states.get(ctx) : {};\nconst set    = (ctx, x) => states.set(ctx, Object.assign(get(ctx), x));\n\n/**\n * this function adds the new methods to the Assertion\n * chain, where they have the following responsibilities:\n *\n * produce: sets the expected value of the stream\n * on:      gives a set of input values, if testing\n *          a transformer\n * notify:  cb for error and done notifications\n *\n * @param {object} chai  to be extended\n */\nconst StreamHelper = function({ Assertion }) {\n    Assertion.addChainableMethod(\"exactly\", function(expected) {\n        set(this._obj, {\n            expected:       defaults(expected).to(get(this._obj).expected),\n            strictEquality: true\n        });\n    }, function() {\n        set(this._obj, {\n            strictEquality: true\n        });\n    });\n\n    Assertion.addChainableMethod(\"produce\", function(expected) {\n        set(this._obj, {\n            expected: expected,\n            args:     []\n        });\n    }, function() {\n        set(this._obj, {\n            args: []\n        });\n    });\n\n    Assertion.addProperty(\"eventually\", function() {\n        set(this._obj, {\n            checkAllResults: true\n        });\n    });\n\n    Assertion.addMethod(\"filter\", function(filter) {\n        set(this._obj, {\n            filterMethod: filter\n        });\n    });\n\n    Assertion.addMethod(\"notify\", function(done) {\n        const sink = new AssertStream(get(this._obj).expected, {\n            filter:     get(this._obj).filterMethod,\n            tapper:     get(this._obj).tapper,\n            eventually: get(this._obj).checkAllResults,\n            strict:     get(this._obj).strictEquality\n        });\n\n        this._obj.pipe(sink)     // eslint-disable-line\n            .on(\"done\", done)\n            .on(\"error\", done);\n\n        get(this._obj).args.forEach(arg => this._obj.write(arg)); // eslint-disable-line\n    });\n\n    Assertion.addMethod(\"tap\", function(tapper) {\n        set(this._obj, { tapper });\n    });\n\n    Assertion.addMethod(\"on\", function(...args) {\n        const { write } = this._obj; // eslint-disable-line\n\n        assert((\n            (args.length > 0 && isFunction(write)) ||\n            (args.length === 0 && !isFunction(write))\n        ), \"You can only use arguments with a writable stream.\");\n\n        set(this._obj, { args });\n    });\n};\n\nexport default StreamHelper;\n"
   },
   {
     "__docId__": 21,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "states",
+    "memberof": "src/StreamHelper.js",
+    "longname": "src/StreamHelper.js~states",
+    "access": null,
+    "export": false,
+    "importPath": "expect-stream/src/StreamHelper.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "type": {
+      "types": [
+        "WeakMap"
+      ]
+    }
+  },
+  {
+    "__docId__": 22,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "get",
+    "memberof": "src/StreamHelper.js",
+    "longname": "src/StreamHelper.js~get",
+    "access": null,
+    "export": false,
+    "importPath": "expect-stream/src/StreamHelper.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 23,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "set",
+    "memberof": "src/StreamHelper.js",
+    "longname": "src/StreamHelper.js~set",
+    "access": null,
+    "export": false,
+    "importPath": "expect-stream/src/StreamHelper.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 8,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 24,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -512,7 +542,7 @@
     "importPath": "expect-stream/src/StreamHelper.js",
     "importStyle": "StreamHelper",
     "description": "this function adds the new methods to the Assertion\nchain, where they have the following responsibilities:\n\nproduce: sets the expected value of the stream\non:      gives a set of input values, if testing\n         a transformer\nnotify:  cb for error and done notifications",
-    "lineNumber": 17,
+    "lineNumber": 21,
     "params": [
       {
         "nullable": null,
@@ -528,7 +558,7 @@
     "generator": false
   },
   {
-    "__docId__": 22,
+    "__docId__": 25,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -541,7 +571,7 @@
     "content": "import AssertStream from \"../AssertStream\";\nimport sinon from \"sinon\";\nimport { expect } from \"chai\";\n\ndescribe(\"AssertStreamTest\", function() {\n    it(\"writes to an assert stream with a value expectation, until it ends with the expected value.\", function(done) {\n        const tapSpy = sinon.spy();\n        const onEnd  = sinon.spy();\n        const stream = new AssertStream({\n            test: \"test\"\n        }, {\n            tapper:     tapSpy,\n            eventually: true\n        });\n\n        stream.on(\"done\", onEnd);\n\n        stream.write(\"bla\");\n        stream.write({});\n        stream.write({\n            test: \"test\"\n        });\n\n        setTimeout(function() {\n            expect(onEnd.callCount).to.equal(1);\n            expect(tapSpy.firstCall.args.shift()).to.equal(\"bla\");\n            expect(tapSpy.firstCall.args.shift()).to.equal(0);\n            expect(tapSpy.secondCall.args.shift()).to.eql({});\n            expect(tapSpy.secondCall.args.shift()).to.equal(0);\n            expect(tapSpy.thirdCall.args.shift()).to.eql({\n                test: \"test\"\n            });\n            expect(tapSpy.thirdCall.args.shift()).to.equal(1);\n            expect(stream._writableState.ended).to.equal(false); // eslint-disable-line\n            done();\n        }, 20);\n    });\n\n    it(\"writes to an assert stream with a function expectation, until it ends with the expected value.\", function(done) {\n        const onEnd  = sinon.spy();\n        const stream = new AssertStream(x => x.test === \"test\" ? 1 : 0, {});\n\n        stream.on(\"done\", onEnd);\n\n        stream.write(\"bla\");\n        stream.write({});\n        stream.write({\n            test: \"test\"\n        });\n\n        setTimeout(function() {\n            expect(onEnd.callCount).to.equal(1);\n            expect(stream._writableState.ended).to.equal(false); // eslint-disable-line\n            done();\n        }, 20);\n    });\n\n    it(\"writes to an assert stream with a function expectation, until it ends with the expected value.\", function(done) {\n        const tapSpy = sinon.spy();\n        const stream = new AssertStream(x => x.test === \"test\" ? 1 : -1, {\n            tapper: tapSpy\n        });\n\n        stream.on(\"error\", e => {\n            expect(e.message).to.equal(\"the messages [\\\"bla\\\"] do not match your expectations.\");\n            expect(tapSpy.firstCall.args.shift()).to.equal(\"bla\");\n            expect(tapSpy.firstCall.args.shift()).to.equal(-1);\n            expect(stream._writableState.ended).to.equal(false); // eslint-disable-line\n            done();\n        });\n\n        stream.write(\"bla\");\n    });\n\n    it(\"writes to an assert stream, that expects multiple messages\", function(done) {\n        const tapSpy = sinon.spy();\n        const stream = new AssertStream([\"test1\", \"test2\", \"test3\"], {\n            tapper: tapSpy\n        });\n        const onEnd = function() {\n            expect(tapSpy.firstCall.calledWith(\"test1\", 0));\n            expect(tapSpy.secondCall.calledWith(\"test2\", 0));\n            expect(tapSpy.thirdCall.calledWith(\"test3\", 1));\n            expect(stream._writableState.ended).to.equal(false); // eslint-disable-line\n            done();\n        };\n\n        stream.on(\"done\", onEnd);\n        stream.write(\"test1\");\n        stream.write(\"test2\");\n        stream.write(\"test3\");\n    });\n\n    it(\"writes to an assert stream, filtering some messages\", function(done) {\n        const tapSpy = sinon.spy();\n        const stream = new AssertStream([\"test1\", \"test2\"], {\n            tapper: tapSpy,\n            filter: value => value !== \"test4\"\n        });\n\n        const onEnd = function() {\n            expect(tapSpy.firstCall.calledWith(\"test4\", 0));\n            expect(tapSpy.secondCall.calledWith(\"test1\", 0));\n            expect(tapSpy.thirdCall.calledWith(\"test2\", 1));\n            expect(stream._writableState.ended).to.equal(false); // eslint-disable-line\n            done();\n        };\n\n        stream.on(\"done\", onEnd);\n        stream.write(\"test4\");\n        stream.write(\"test1\");\n        stream.write(\"test2\");\n    });\n});\n"
   },
   {
-    "__docId__": 23,
+    "__docId__": 26,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -551,10 +581,10 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "import isArray from \"lodash.isarray\";\nimport { expect } from \"../index\";\nimport { Readable, Transform } from \"stream\";\nimport assert from \"assert\";\nimport sinon from \"sinon\";\n\nclass ReadStream extends Readable {\n    constructor(messages = \"lala\") {\n        super({ objectMode: true });\n\n        this.messages = messages;\n    }\n\n    _read() {\n        this.push(\n            isArray(this.messages) ?\n            this.messages.shift() :\n            this.messages\n        );\n    }\n}\n\nclass TransformStream extends Transform {\n    _transform(chunk, enc, cb) {\n        this.push(chunk);\n        setTimeout(cb, 20);\n    }\n}\n\n\nclass ReadObjectStream extends Readable {\n    constructor() {\n        super({\n            objectMode: true\n        });\n    }\n\n    _read() {\n        this.push({\n            test: {\n                test: []\n            }\n        });\n    }\n}\n\nclass TransformObjStream extends Transform {\n    constructor() {\n        super({\n            objectMode: true\n        });\n    }\n\n    _transform(obj, enc, cb) {\n        this.push(obj);\n        setTimeout(cb, 20);\n    }\n}\n\n\ndescribe(\"ExpectStreamTest\", function() { // eslint-disable-line\n    it(\"uses the produce assertion with a readstream, matching exactly\", function(done) {\n        expect(new ReadStream([\"lala1\", \"lala2\", \"lala3\"]))\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, matching on strict equality\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.exactly.produce({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, matching on strict equality - part2\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.produce.exactly({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, containing at least key test\", function(done) {\n        expect(new ReadStream({ test: \"lala\", another: \"lulu\" }))\n            .to.produce({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, containing at least key test\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.produce({ test: \"lala\", another: \"lulu\" })\n            .notify(e => e ? done() : done(new Error(\"Shouldn't end up here.\")));\n    });\n\n    it(\"uses the produce assertion with a readstream, matching exactly and fails\", function(done) {\n        const stream = new ReadStream([\"lala1\", \"lala\", \"lala3\"]);\n\n        expect(stream)\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(e => {\n                if(!e) return done(new Error(\"Should fail\"));\n\n                try {\n                    expect(stream._readableState.ended).to.equal(false); // eslint-disable-line\n\n                    return done();\n                } catch(e2) {\n                    return done(e2);\n                }\n            });\n    });\n\n    it(\"uses the produce assertion with a readstream, matching not exactly\", function(done) {\n        const stream = new ReadStream([\"lala1\", \"lala\", \"lala2\", \"lala3\"]);\n\n        expect(stream)\n            .to.eventually.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(e => {\n                if(e) return done(e);\n\n                try {\n                    expect(stream._readableState.ended).to.equal(false); // eslint-disable-line\n\n                    return done();\n                } catch(e2) {\n                    return done(e2);\n                }\n            });\n    });\n\n    it(\"uses the produce assertion with a readstream, matching exactly, but filtering some messages\", function(done) {\n        expect(new ReadStream([\"lala1\", \"lala\", \"lala2\", \"lala3\"]))\n            .filter(value => value !== \"lala\")\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(done);\n    });\n\n    it(\"uses the eventually produce assertion with a readstream, producing buffers.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce(\"lala\").notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, producing objects.\", function(done) {\n        expect(new ReadObjectStream()).to.eventually.produce({\n            test: {\n                test: []\n            }\n        }).notify(done);\n    });\n\n    it(\"fails the produce assertion on the readstream with buffers.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce(\"lulu\").notify(() => done(new Error(\"should not finish\")));\n        setTimeout(() => done(), 20);\n    });\n\n    it(\"fails the produce assertion on the readstream with objects.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce({\n            test: \"test2\"\n        }).notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 20);\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream()).to.eventually.produce(\"huhu\").on(\"lala\", \"test\", \"huhu\").notify(done);\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing objects.\", function(done) {\n        expect(new TransformObjStream()).to.eventually.produce({\n            test: {\n                test: []\n            }\n        }).on(\"lala\", \"test\", \"huhu\", {\n            test: {\n                test: []\n            }\n        }).notify(done);\n    });\n\n    it(\"fails the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream())\n            .to.eventually.produce(\"huhu\")\n            .on(\"lala\", \"test\")\n            .notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 70);\n    });\n\n    it(\"fails the produce assertion with a transformstream, producing objects.\", function(done) {\n        expect(new TransformObjStream())\n            .to.eventually.produce({\n                test: {\n                    test: []\n                }\n            })\n            .on(\"lala\", \"test\", {\n                test: {\n                    test: 1\n                }\n            })\n            .notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 70);\n    });\n\n    it(\"tries to test a readstream with input\", function(done) {\n        try {\n            expect(new ReadStream()).to.eventually.produce(\"test\").on(\"bla\").notify(done);\n        } catch(e) {\n            assert.equal(e.message, \"You can only use arguments with a writable stream.\");\n            done();\n        }\n    });\n\n    it(\"tries to test a transformstream without input\", function(done) {\n        try {\n            expect(new TransformStream()).to.eventually.produce(\"test\").on().notify(done);\n        } catch(e) {\n            assert.equal(e.message, \"You can only use arguments with a writable stream.\");\n            done();\n        }\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream())\n            .to.produce(x => x === \"huhu\" ? 1 : -1)\n            .on(\"lala\", \"test\", \"huhu\")\n            .notify(e => e instanceof Error ? done() : done(new Error(\"should throw\")));\n    });\n\n    it(\"taps a stream under test.\", function(done) {\n        const spy = sinon.spy();\n\n        expect(new TransformStream())\n            .to.eventually.produce(\"huhu\")\n            .on(\"lala\", \"test\", \"huhu\")\n            .tap(spy)\n            .notify(() => {\n                try {\n                    expect(spy.callCount).to.equal(3);\n                    expect(spy.firstCall.args.shift()).to.equal(\"lala\");\n                    expect(spy.firstCall.args.shift()).to.equal(0);\n                    expect(spy.secondCall.args.shift()).to.equal(\"test\");\n                    expect(spy.secondCall.args.shift()).to.equal(0);\n                    expect(spy.thirdCall.args.shift()).to.equal(\"huhu\");\n                    expect(spy.thirdCall.args.shift()).to.equal(1);\n                    done();\n                } catch(e) {\n                    done(e);\n                }\n            });\n    });\n});\n"
+    "content": "import isArray from \"lodash.isarray\";\nimport { expect } from \"../index\";\nimport { Readable, Transform } from \"stream\";\nimport assert from \"assert\";\nimport sinon from \"sinon\";\n\nclass ReadStream extends Readable {\n    constructor(messages = \"lala\") {\n        super({ objectMode: true });\n\n        this.messages = messages;\n    }\n\n    _read() {\n        const message = isArray(this.messages) ? this.messages.shift() : this.messages;\n\n        this.push(message);\n    }\n}\n\nclass TransformStream extends Transform {\n    _transform(chunk, enc, cb) {\n        this.push(chunk);\n        setTimeout(cb, 20);\n    }\n}\n\n\nclass ReadObjectStream extends Readable {\n    constructor() {\n        super({\n            objectMode: true\n        });\n    }\n\n    _read() {\n        this.push({\n            test: {\n                test: []\n            }\n        });\n    }\n}\n\nclass TransformObjStream extends Transform {\n    constructor() {\n        super({\n            objectMode: true\n        });\n    }\n\n    _transform(obj, enc, cb) {\n        this.push(obj);\n        setTimeout(cb, 20);\n    }\n}\n\n\ndescribe(\"ExpectStreamTest\", function() { // eslint-disable-line\n    it(\"uses the produce assertion with a readstream, matching exactly\", function(done) {\n        expect(new ReadStream([\"lala1\", \"lala2\", \"lala3\"]))\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, matching on strict equality\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.exactly.produce({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, matching on strict equality - part2\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.produce.exactly({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, containing at least key test\", function(done) {\n        expect(new ReadStream({ test: \"lala\", another: \"lulu\" }))\n            .to.produce({ test: \"lala\" })\n            .notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, containing at least key test\", function(done) {\n        expect(new ReadStream({ test: \"lala\" }))\n            .to.produce({ test: \"lala\", another: \"lulu\" })\n            .notify(e => e ? done() : done(new Error(\"Shouldn't end up here.\")));\n    });\n\n    it(\"uses the produce assertion with a readstream, matching exactly and fails\", function(done) {\n        const stream = new ReadStream([\"lala1\", \"lala\", \"lala3\"]);\n\n        expect(stream)\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(e => {\n                if(!e) return done(new Error(\"Should fail\"));\n\n                try {\n                    expect(stream._readableState.ended).to.equal(false); // eslint-disable-line\n\n                    return done();\n                } catch(e2) {\n                    return done(e2);\n                }\n            });\n    });\n\n    it(\"uses the produce assertion with a readstream, matching not exactly\", function(done) {\n        const stream = new ReadStream([\"lala1\", \"lala\", \"lala2\", \"lala3\"]);\n\n        expect(stream)\n            .to.eventually.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(e => {\n                if(e) return done(e);\n\n                try {\n                    expect(stream._readableState.ended).to.equal(false); // eslint-disable-line\n\n                    return done();\n                } catch(e2) {\n                    return done(e2);\n                }\n            });\n    });\n\n    it(\"uses the produce assertion with a readstream, matching exactly, but filtering some messages\", function(done) {\n        expect(new ReadStream([\"lala1\", \"lala\", \"lala2\", \"lala3\"]))\n            .filter(value => value !== \"lala\")\n            .to.produce([\"lala1\", \"lala2\", \"lala3\"])\n            .notify(done);\n    });\n\n    it(\"uses the eventually produce assertion with a readstream, producing buffers.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce(\"lala\").notify(done);\n    });\n\n    it(\"uses the produce assertion with a readstream, producing objects.\", function(done) {\n        expect(new ReadObjectStream()).to.eventually.produce({\n            test: {\n                test: []\n            }\n        }).notify(done);\n    });\n\n    it(\"fails the produce assertion on the readstream with buffers.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce(\"lulu\").notify(() => done(new Error(\"should not finish\")));\n        setTimeout(() => done(), 20);\n    });\n\n    it(\"fails the produce assertion on the readstream with objects.\", function(done) {\n        expect(new ReadStream()).to.eventually.produce({\n            test: \"test2\"\n        }).notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 20);\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream()).to.eventually.produce(\"huhu\").on(\"lala\", \"test\", \"huhu\").notify(done);\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing objects.\", function(done) {\n        expect(new TransformObjStream()).to.eventually.produce({\n            test: {\n                test: []\n            }\n        }).on(\"lala\", \"test\", \"huhu\", {\n            test: {\n                test: []\n            }\n        }).notify(done);\n    });\n\n    it(\"fails the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream())\n            .to.eventually.produce(\"huhu\")\n            .on(\"lala\", \"test\")\n            .notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 70);\n    });\n\n    it(\"fails the produce assertion with a transformstream, producing objects.\", function(done) {\n        expect(new TransformObjStream())\n            .to.eventually.produce({\n                test: {\n                    test: []\n                }\n            })\n            .on(\"lala\", \"test\", {\n                test: {\n                    test: 1\n                }\n            })\n            .notify(() => done(new Error(\"should not finish\")));\n\n        setTimeout(() => done(), 70);\n    });\n\n    it(\"tries to test a readstream with input\", function(done) {\n        try {\n            expect(new ReadStream()).to.eventually.produce(\"test\").on(\"bla\").notify(done);\n        } catch(e) {\n            assert.equal(e.message, \"You can only use arguments with a writable stream.\");\n            done();\n        }\n    });\n\n    it(\"tries to test a transformstream without input\", function(done) {\n        try {\n            expect(new TransformStream()).to.eventually.produce(\"test\").on().notify(done);\n        } catch(e) {\n            assert.equal(e.message, \"You can only use arguments with a writable stream.\");\n            done();\n        }\n    });\n\n    it(\"uses the produce assertion with a transformstream, producing buffers.\", function(done) {\n        expect(new TransformStream())\n            .to.produce(x => x === \"huhu\" ? 1 : -1)\n            .on(\"lala\", \"test\", \"huhu\")\n            .notify(e => e instanceof Error ? done() : done(new Error(\"should throw\")));\n    });\n\n    it(\"taps a stream under test.\", function(done) {\n        const spy = sinon.spy();\n\n        expect(new TransformStream())\n            .to.eventually.produce(\"huhu\")\n            .on(\"lala\", \"test\", \"huhu\")\n            .tap(spy)\n            .notify(() => {\n                try {\n                    expect(spy.callCount).to.equal(3);\n                    expect(spy.firstCall.args.shift()).to.equal(\"lala\");\n                    expect(spy.firstCall.args.shift()).to.equal(0);\n                    expect(spy.secondCall.args.shift()).to.equal(\"test\");\n                    expect(spy.secondCall.args.shift()).to.equal(0);\n                    expect(spy.thirdCall.args.shift()).to.equal(\"huhu\");\n                    expect(spy.thirdCall.args.shift()).to.equal(1);\n                    done();\n                } catch(e) {\n                    done(e);\n                }\n            });\n    });\n});\n"
   },
   {
-    "__docId__": 24,
+    "__docId__": 27,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -574,7 +604,7 @@
     ]
   },
   {
-    "__docId__": 25,
+    "__docId__": 28,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -599,7 +629,7 @@
     "generator": false
   },
   {
-    "__docId__": 26,
+    "__docId__": 29,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -617,7 +647,7 @@
     }
   },
   {
-    "__docId__": 27,
+    "__docId__": 30,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -632,7 +662,7 @@
     "generator": false
   },
   {
-    "__docId__": 28,
+    "__docId__": 31,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -644,7 +674,7 @@
     "importPath": "expect-stream/src/__tests__/ExpectStreamTest.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 23,
+    "lineNumber": 21,
     "undocument": true,
     "interface": false,
     "extends": [
@@ -652,7 +682,7 @@
     ]
   },
   {
-    "__docId__": 29,
+    "__docId__": 32,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -661,7 +691,7 @@
     "longname": "src/__tests__/ExpectStreamTest.js~TransformStream#_transform",
     "access": null,
     "description": null,
-    "lineNumber": 24,
+    "lineNumber": 22,
     "undocument": true,
     "params": [
       {
@@ -686,7 +716,7 @@
     "generator": false
   },
   {
-    "__docId__": 30,
+    "__docId__": 33,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -698,7 +728,7 @@
     "importPath": "expect-stream/src/__tests__/ExpectStreamTest.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 31,
+    "lineNumber": 29,
     "undocument": true,
     "interface": false,
     "extends": [
@@ -706,7 +736,7 @@
     ]
   },
   {
-    "__docId__": 31,
+    "__docId__": 34,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -715,13 +745,13 @@
     "longname": "src/__tests__/ExpectStreamTest.js~ReadObjectStream#constructor",
     "access": null,
     "description": null,
-    "lineNumber": 32,
+    "lineNumber": 30,
     "undocument": true,
     "params": [],
     "generator": false
   },
   {
-    "__docId__": 32,
+    "__docId__": 35,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -730,13 +760,13 @@
     "longname": "src/__tests__/ExpectStreamTest.js~ReadObjectStream#_read",
     "access": null,
     "description": null,
-    "lineNumber": 38,
+    "lineNumber": 36,
     "undocument": true,
     "params": [],
     "generator": false
   },
   {
-    "__docId__": 33,
+    "__docId__": 36,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -748,7 +778,7 @@
     "importPath": "expect-stream/src/__tests__/ExpectStreamTest.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 47,
+    "lineNumber": 45,
     "undocument": true,
     "interface": false,
     "extends": [
@@ -756,7 +786,7 @@
     ]
   },
   {
-    "__docId__": 34,
+    "__docId__": 37,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -765,13 +795,13 @@
     "longname": "src/__tests__/ExpectStreamTest.js~TransformObjStream#constructor",
     "access": null,
     "description": null,
-    "lineNumber": 48,
+    "lineNumber": 46,
     "undocument": true,
     "params": [],
     "generator": false
   },
   {
-    "__docId__": 35,
+    "__docId__": 38,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -780,7 +810,7 @@
     "longname": "src/__tests__/ExpectStreamTest.js~TransformObjStream#_transform",
     "access": null,
     "description": null,
-    "lineNumber": 54,
+    "lineNumber": 52,
     "undocument": true,
     "params": [
       {
@@ -805,7 +835,7 @@
     "generator": false
   },
   {
-    "__docId__": 36,
+    "__docId__": 39,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -818,7 +848,7 @@
     "content": "import Expected from \"../Expected\";\nimport { expect } from \"chai\";\n\ndescribe(\"Expected\", function() {\n    it(\"compares a single value with the expected one\", function() {\n        const expected = Expected.of(\"Test\", {});\n\n        expect(expected.match(\"Test\")).to.equal(1);\n        expect(expected.match(\"NotTest\")).to.equal(-1);\n    });\n\n    it(\"compares a single value with the expected one, skipping all not matching ones\", function() {\n        const expected = Expected.of(\"Test\", {\n            eventually: true\n        });\n\n        expect(expected.match(\"Test\")).to.equal(1);\n        expect(expected.match(\"NotTest\")).to.equal(0);\n    });\n\n    it(\"compares a list of values with another list of values\", function() {\n        const expected = Expected.of([\"Test1\", \"Test2\", \"Test3\"], {});\n\n        expect(expected.match(\"Test1\")).to.equal(0);\n        expect(expected.match(\"Test2\")).to.equal(0);\n        expect(expected.match(\"Test3\")).to.equal(1);\n    });\n\n    it(\"compares a list of values with another list, skipping all non-matches\", function() {\n        const expected = Expected.of([\"Test3\", \"Test4\", \"Test5\"], {\n            eventually: true\n        });\n\n        expect(expected.match(\"Test3\")).to.equal(0);\n        expect(expected.match(\"Test4\")).to.equal(0);\n        expect(expected.match(\"Test4\")).to.equal(0);\n        expect(expected.match(\"Test5\")).to.equal(1);\n    });\n\n    it(\"compares a list of values with a filter\", function() {\n        const expected = Expected.of([\"Test3\", \"Test4\", \"Test5\"], {\n            filter: value => value !== \"Test2\"\n        });\n\n        expect(expected.match(\"Test3\")).to.equal(0);\n        expect(expected.match(\"Test2\")).to.equal(0);\n        expect(expected.match(\"Test4\")).to.equal(0);\n        expect(expected.match(\"Test5\")).to.equal(1);\n    });\n\n    it(\"compares a single of values with a filter\", function() {\n        const expected = Expected.of(\"Test3\", {\n            filter: value => value !== \"Test2\"\n        });\n\n        expect(expected.match(\"Test2\")).to.equal(0);\n        expect(expected.match(\"Test3\")).to.equal(1);\n    });\n\n    it(\"compares with a function\", function() {\n        const expected = Expected.of(value => value === \"Test3\" ? 1 : -1, {\n            filter: value => value !== \"Test2\"\n        });\n\n        expect(expected.match(\"Test1\")).to.equal(-1);\n        expect(expected.match(\"Test2\")).to.equal(0);\n        expect(expected.match(\"Test3\")).to.equal(1);\n    });\n});\n"
   },
   {
-    "__docId__": 37,
+    "__docId__": 40,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -831,7 +861,7 @@
     "content": ""
   },
   {
-    "__docId__": 38,
+    "__docId__": 41,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -844,7 +874,7 @@
     "content": "import StreamHelper from \"./StreamHelper\";\n\nconst chai = require(\"chai\");\n\nchai.use(StreamHelper);\n\nmodule.exports = chai;\n"
   },
   {
-    "__docId__": 39,
+    "__docId__": 42,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -865,7 +895,7 @@
     }
   },
   {
-    "__docId__": 41,
+    "__docId__": 44,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -878,7 +908,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 42,
+    "__docId__": 45,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -891,7 +921,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 43,
+    "__docId__": 46,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -904,7 +934,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 44,
+    "__docId__": 47,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -917,7 +947,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 45,
+    "__docId__": 48,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -930,7 +960,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 46,
+    "__docId__": 49,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -943,7 +973,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 47,
+    "__docId__": 50,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -956,7 +986,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 48,
+    "__docId__": 51,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -969,7 +999,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 49,
+    "__docId__": 52,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -982,7 +1012,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 50,
+    "__docId__": 53,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -995,7 +1025,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 51,
+    "__docId__": 54,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1008,7 +1038,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 52,
+    "__docId__": 55,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1021,7 +1051,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 53,
+    "__docId__": 56,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1034,7 +1064,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 54,
+    "__docId__": 57,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1047,7 +1077,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 55,
+    "__docId__": 58,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1060,7 +1090,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 56,
+    "__docId__": 59,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1073,7 +1103,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 57,
+    "__docId__": 60,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1086,7 +1116,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 58,
+    "__docId__": 61,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1099,7 +1129,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 59,
+    "__docId__": 62,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1112,7 +1142,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 60,
+    "__docId__": 63,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1125,7 +1155,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 61,
+    "__docId__": 64,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1138,7 +1168,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 62,
+    "__docId__": 65,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1151,7 +1181,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 63,
+    "__docId__": 66,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1164,7 +1194,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 64,
+    "__docId__": 67,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1177,7 +1207,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 65,
+    "__docId__": 68,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1190,7 +1220,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 66,
+    "__docId__": 69,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1203,7 +1233,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 67,
+    "__docId__": 70,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1216,7 +1246,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 68,
+    "__docId__": 71,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1229,7 +1259,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 69,
+    "__docId__": 72,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1242,7 +1272,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 70,
+    "__docId__": 73,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1255,7 +1285,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 71,
+    "__docId__": 74,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1268,7 +1298,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 72,
+    "__docId__": 75,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1281,7 +1311,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 73,
+    "__docId__": 76,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1294,7 +1324,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 74,
+    "__docId__": 77,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1307,7 +1337,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 75,
+    "__docId__": 78,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1320,7 +1350,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 76,
+    "__docId__": 79,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1333,7 +1363,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 77,
+    "__docId__": 80,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1346,7 +1376,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 78,
+    "__docId__": 81,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1359,7 +1389,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 79,
+    "__docId__": 82,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1372,7 +1402,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 80,
+    "__docId__": 83,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1385,7 +1415,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 81,
+    "__docId__": 84,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1398,7 +1428,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 82,
+    "__docId__": 85,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1411,7 +1441,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 83,
+    "__docId__": 86,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1424,7 +1454,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 84,
+    "__docId__": 87,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1437,7 +1467,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 85,
+    "__docId__": 88,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1450,7 +1480,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 86,
+    "__docId__": 89,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1463,7 +1493,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 87,
+    "__docId__": 90,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1476,7 +1506,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 89,
+    "__docId__": 92,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1489,7 +1519,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 90,
+    "__docId__": 93,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1502,7 +1532,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 91,
+    "__docId__": 94,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1515,7 +1545,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 92,
+    "__docId__": 95,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1528,7 +1558,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 93,
+    "__docId__": 96,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1541,7 +1571,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 94,
+    "__docId__": 97,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1554,7 +1584,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 95,
+    "__docId__": 98,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1567,7 +1597,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 96,
+    "__docId__": 99,
     "kind": "external",
     "static": true,
     "variation": null,

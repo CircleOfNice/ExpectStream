@@ -114,7 +114,7 @@ $(WORKING_DIR)/build/src/lib: $(WORKING_DIR)/build/src
 $(WORKING_DIR)/build/src/%.js: $(WORKING_DIR)/src/%.js $(WORKING_DIR)/setupfile
 	mkdir -p $(dir $@)
 	$(WORKING_DIR)/node_modules/.bin/eslint $<
-	$(WORKING_DIR)/node_modules/.bin/babel $< --out-file $@ --source-maps --presets stage-0,es2015 --plugins transform-decorators-legacy,transform-runtime,transform-class-properties
+	$(WORKING_DIR)/node_modules/.bin/babel $< --out-file $@ --source-maps --presets stage-0,es2015 --plugins source-map-support-for-6,transform-decorators-legacy,transform-runtime,transform-class-properties
 
 ##
 #  every destination file needs a transpiled

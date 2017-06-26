@@ -39,13 +39,12 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="coreassert">CoreAssert</h1>
-<p>Testing stuff sucks and testing more esoteric stuff sucks harder. So we build this extension to chai to reduce the suck-factor of comparing images and testing node streams.
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="expectstream">ExpectStream</h1>
+<p>Testing streams sucks. So we built this extension to chai to reduce the suck-factor of testing node streams.
 Now, let&apos;s forget about all the drama and call it a victory:</p>
 <p><img src="http://www.quotesmeme.com/wp-content/uploads/2015/06/f60752b4481e83013217fa3d82f616bd.jpg" alt="victory" title="victory"></p>
 <h1 id="api">API</h1>
-<p>As this module extends <a href="http://chaijs.com">chai</a> most of the documentation can be found at their website. CoreAssert extends it with new methods for asserting streams asynchronously and also ships some assertions for image comparison:</p>
-<h3 id="streams">Streams</h3>
+<p>As this module extends <a href="http://chaijs.com">chai</a> most of the documentation can be found at their website. ExpectStream extends it with new methods for asserting streams asynchronously:</p>
 <h5 id="-produce">.produce</h5>
 <p>This method takes either one or multiple values, which are expected to be the only outputs produced by the stream under test or a function that takes the value and checks if it is the expected one. In the latter case, there are three values your callback should return to signal its state:</p>
 <ul>
@@ -57,9 +56,9 @@ Now, let&apos;s forget about all the drama and call it a victory:</p>
 </li>
 </ul>
 <h5 id="-eventually">.eventually</h5>
-<p>This property allows CoreAssert to ignore mismatches until the correct values are produced.</p>
+<p>This property allows ExpectStream to ignore mismatches until the correct values are produced.</p>
 <h4 id="-exactly">.exactly</h4>
-<p>Using this chainable method will adjust the assertion configuration to strict equality. Otherwise <code>CoreAssert</code> validates, if the produced output contains the expected value. </p>
+<p>Using this chainable method will adjust the assertion configuration to strict equality. Otherwise <code>ExpectStream</code> validates, if the produced output contains the expected value. </p>
 <h5 id="-filter">.filter</h5>
 <p>This method accepts a function, that can be used to ignore some outputs, which is signalled by returning <code>false</code> in this callback.</p>
 <h5 id="-on">.on</h5>
@@ -68,13 +67,7 @@ Now, let&apos;s forget about all the drama and call it a victory:</p>
 <p>This method is used to notify the testrunner if an error occurs or if the streams ended and have produced the expected message</p>
 <h5 id="-tap">.tap</h5>
 <p>With this method you can tap into the stream under test and inspect whats going on, if an error happens</p>
-<h3 id="image-comparison">Image Comparison</h3>
-<h5 id="-image">.image</h5>
-<p>This function expects the value to be the buffer of the reference image you are testing against.</p>
-<h5 id="-part">.part</h5>
-<p>In conjunction with the previous method this method enables you to ignore several regions of both images, when comparing them. See <a href="https://github.com/CircleOfNice/ImageComparer.git">ImageComparer</a> if you like to get to know more about regions.</p>
 <h1 id="usage">Usage</h1>
-<h3 id="testing-streams">Testing Streams</h3>
 <p>Suppose we have a transform stream, that adds a Mr. to the start of every value, that enters it:</p>
 <pre><code class="lang-js"><code class="source-code prettyprint">// src/Misterizer
 import { Transform } from &quot;stream&quot;;
@@ -86,7 +79,7 @@ export default class Misterizer extends Transform {
     }
 }</code>
 </code></pre>
-<p>Now we&apos;d like to test it, using mocha with CoreAssert:</p>
+<p>Now we&apos;d like to test it, using mocha with ExpectStream:</p>
 <pre><code class="lang-js"><code class="source-code prettyprint">// src/__tests__/MisterizerTest
 import { expect } from &quot;core-assert&quot;;
 import Misterizer from &quot;../Misterizer&quot;
@@ -110,7 +103,7 @@ describe(&quot;MisterizerTest&quot;, function() {
     });
 });</code>
 </code></pre>
-<p>But the mighty power of <code>CoreAssert</code> offers much more functionality, which will be presented by FunnyBot: </p>
+<p>But the mighty power of <code>ExpectStream</code> offers much more functionality, which will be presented by FunnyBot: </p>
 <pre><code class="lang-js"><code class="source-code prettyprint">// src/FunnyBot
 import { Readable } from &quot;stream&quot;;
 
@@ -183,59 +176,8 @@ describe(&quot;FunnyBot&quot;, function() {
     });
 });</code>
 </code></pre>
-<h3 id="testing-images">Testing Images</h3>
-<p>Using mocha with CoreAssert for image comparison results in the following:</p>
-<pre><code class="lang-js"><code class="source-code prettyprint">// src/__tests__/ImageComparerTest
-import { expect } from &quot;core-assert&quot;;
-import Q from &quot;q&quot;;
-import fs from &quot;fs&quot;;
-
-describe(&quot;ImageComparerTest&quot;, function() {
-    // this test results in a full comparison of given image buffers
-    it(&quot;ImageComparer (no regions)&quot;, async function(done) {
-        try {
-            const image     = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/image.png&quot;));
-            const reference = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/reference.png&quot;));
-
-            expect(image).to.be.image(reference);
-            done();
-        } catch(e) {
-            done(e);
-        }
-    });
-
-    // this test results in a comparison of given image buffers with suppressed regions
-    it(&quot;ImageComparer (with regions)&quot;, async function(done) {
-        try {
-            const image     = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/image.png&quot;));
-            const reference = await Q.nfcall(fs.readFile, path.join(__dirname, &quot;./images/reference.png&quot;));
-            const regions   = [{
-                absolute: {
-                    x:      10,
-                    y:      10,
-                    height: 5,
-                    width:  5
-                },
-                relative: {
-                    x:      10,
-                    y:      10,
-                    height: 5,
-                    width:  5
-                },
-                precision: 100
-            }];
-
-            expect(image).to.be.part(regions).of.image(reference);
-
-            done();
-        } catch(e) {
-            done(e);
-        }
-    });
-});</code>
-</code></pre>
 <h1 id="-a-name-testing-a-testing"><a name="testing"></a>Testing</h1>
-<p>CoreAssert is tested with mocha by executing <code>make test</code> in the root directory of the project.</p>
+<p>ExpectStream is tested with mocha by executing <code>make test</code> in the root directory of the project.</p>
 <h1 id="contributing">Contributing</h1>
 <p>If you want to contribute to this repository, please ensure ...</p>
 <ul>
