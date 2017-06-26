@@ -5,8 +5,8 @@ import assert from "assert";
 import sinon from "sinon";
 
 class ReadStream extends Readable {
-    constructor(messages = "lala") {
-        super({ objectMode: true });
+    constructor(messages = "lala", objectMode = true) {
+        super({ objectMode });
 
         this.messages = messages;
     }
@@ -58,7 +58,7 @@ class TransformObjStream extends Transform {
 
 describe("ExpectStreamTest", function() { // eslint-disable-line
     it("uses the produce assertion with a readstream, matching exactly", function(done) {
-        expect(new ReadStream(["lala1", "lala2", "lala3"]))
+        expect(new ReadStream(["lala1", "lala2", "lala3"], false))
             .to.produce(["lala1", "lala2", "lala3"])
             .notify(done);
     });
@@ -88,7 +88,7 @@ describe("ExpectStreamTest", function() { // eslint-disable-line
     });
 
     it("uses the produce assertion with a readstream, matching exactly and fails", function(done) {
-        const stream = new ReadStream(["lala1", "lala", "lala3"]);
+        const stream = new ReadStream(["lala1", "lala", "lala3"], false);
 
         expect(stream)
             .to.produce(["lala1", "lala2", "lala3"])
@@ -106,7 +106,7 @@ describe("ExpectStreamTest", function() { // eslint-disable-line
     });
 
     it("uses the produce assertion with a readstream, matching not exactly", function(done) {
-        const stream = new ReadStream(["lala1", "lala", "lala2", "lala3"]);
+        const stream = new ReadStream(["lala1", "lala", "lala2", "lala3"], false);
 
         expect(stream)
             .to.eventually.produce(["lala1", "lala2", "lala3"])
@@ -124,7 +124,7 @@ describe("ExpectStreamTest", function() { // eslint-disable-line
     });
 
     it("uses the produce assertion with a readstream, matching exactly, but filtering some messages", function(done) {
-        expect(new ReadStream(["lala1", "lala", "lala2", "lala3"]))
+        expect(new ReadStream(["lala1", "lala", "lala2", "lala3"], false))
             .filter(value => value !== "lala")
             .to.produce(["lala1", "lala2", "lala3"])
             .notify(done);

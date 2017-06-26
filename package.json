@@ -1,6 +1,6 @@
 {
   "name": "expect-stream",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "chai extension for mocha stream tests",
   "main": "index.js",
   "scripts": {
